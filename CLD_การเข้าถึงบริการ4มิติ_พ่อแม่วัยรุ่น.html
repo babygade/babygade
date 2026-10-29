@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLD การเข้าถึงบริการ 4 มิติของพ่อแม่วัยรุ่น</title>
+<style>
+:root{ --bg:#ffffff; --panel:#ffffff; --panel-border:#e3e0d6; --ink:#20242a; --muted:#666e73;
+       --pos:#1f9c82; --neg:#c9642f; --loop-r:#b8791f; --node-stroke:#c7ccd1; --accent:#b8791f; --edge-color:#4b5563;
+       --cat-teen-fill:#e3f5f0; --cat-teen-stroke:#1f9c82;
+       --cat-family-fill:#e8ecfb; --cat-family-stroke:#3f5fd1;
+       --cat-community-fill:#eef6e2; --cat-community-stroke:#5a8f2c;
+       --cat-service-fill:#f2ebfa; --cat-service-stroke:#8451c9;
+       --cat-policy-fill:#fbe9ee; --cat-policy-stroke:#c94a72;
+       --cat-outcome-fill:#fdf3df; --cat-outcome-stroke:#c98f1f; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter","Helvetica Neue",Arial,sans-serif}
+.page{max-width:1580px;margin:0 auto;padding:28px 24px 60px}
+.eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--accent)}
+h1{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:30px;font-weight:500;margin:6px 0 8px}
+.subtitle{font-size:14px;color:var(--muted);line-height:1.5;max-width:1100px;margin:0}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:20px 0 12px;flex-wrap:wrap}
+.hint{font-size:13px;color:var(--muted)}
+.btns{display:flex;gap:10px}
+.btn{padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--accent);font-family:inherit;text-decoration:none;display:inline-block;line-height:1.2}
+.btn.solid{background:var(--accent);color:#fff}
+.btn.outline{background:var(--panel);color:var(--accent)}
+#stage{overflow:auto;border:1px solid var(--panel-border);border-radius:10px;background:var(--panel)}
+#cld{width:100%;height:auto;min-width:1200px;display:block;user-select:none;-webkit-user-select:none}
+.node{cursor:grab}
+.node:hover{filter:brightness(1.12)}
+.node.dragging{filter:brightness(1.18);cursor:grabbing}
+.hit{cursor:move}
+.handle{cursor:move}
+.panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;padding:18px 20px}
+.legend{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.lrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;font-size:13px}
+.lrow .lt{font-weight:700;min-width:120px}
+.chip{display:inline-flex;align-items:center;gap:7px}
+.chip i{width:18px;height:14px;border-radius:4px;border:1.6px solid;display:inline-block}
+.sw{display:inline-flex;align-items:center;gap:7px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.grid h2{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:20px;font-weight:500;margin:0 0 12px}
+.vitem{display:flex;gap:10px;padding:8px 0;border-top:1px solid #f0eee8;font-size:13px;line-height:1.5}
+.vitem:first-of-type{border-top:none}
+.dot{width:12px;height:12px;border-radius:50%;border:1.6px solid;flex:0 0 auto;margin-top:4px}
+.vname{font-weight:600}
+.vdesc{color:var(--muted)}
+.litem{display:flex;gap:12px;padding:10px 0;border-top:1px solid #f0eee8;font-size:13px;line-height:1.5}
+.litem:first-of-type{border-top:none}
+.badge{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--loop-r);display:flex;align-items:center;justify-content:center;font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-weight:700;font-size:14px;flex:0 0 auto;color:var(--ink)}
+.note{color:var(--muted);font-size:12.5px}
+.assump{margin-top:22px}
+.assump li{font-size:13px;line-height:1.5;margin-bottom:6px}
+.assump ol{padding-left:22px;margin:0}
+#tip{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;max-width:340px;box-shadow:0 6px 24px rgba(0,0,0,.12);opacity:0;transition:opacity .15s;z-index:20}
+#tip .tt{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-weight:700;font-size:15px;margin-bottom:4px}
+#tip .tb{font-size:12.5px;line-height:1.45;color:var(--ink)}
+#tip .tm{font-size:11.5px;color:var(--muted);margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(10,12,14,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+#modal .card{background:var(--panel);border-radius:10px;max-width:880px;width:100%;max-height:90vh;display:flex;flex-direction:column;padding:20px 22px;gap:12px}
+#modal .mt{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:22px;font-weight:500}
+#modal .mn{font-size:13px;color:var(--muted)}
+#modal .mn.err{color:var(--neg)}
+#modal .prev{overflow:auto;border:1px solid var(--panel-border);border-radius:6px;max-height:56vh}
+#modal .prev img{width:100%;display:block}
+#modal pre{margin:0;padding:12px;font-size:11.5px;font-family:Menlo,Consolas,monospace;white-space:pre}
+#modal .mb{display:flex;gap:10px;justify-content:flex-end}
+
+.litem{cursor:pointer;border-radius:8px;padding-left:8px;padding-right:8px;transition:background .15s}
+.litem:hover,.litem.active{background:#fdf6e8}
+.litem.active .badge{background:var(--loop-r);color:#fff}
+#cld .dim{opacity:.1;transition:opacity .2s}
+#cld .hl-node rect{stroke:var(--loop-r);stroke-width:3.4}
+.loopbar{display:none;align-items:center;gap:10px;font-size:13px;margin:0 0 10px;padding:8px 12px;border:1px solid var(--accent);border-radius:8px;background:#fdf6e8}
+.loopbar b{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif}
+.loopbar button{margin-left:auto;white-space:nowrap;flex:0 0 auto}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="eyebrow">Causal Loop Diagram · ถอดบทเรียนพ่อแม่วัยรุ่น 5 พื้นที่นำร่อง</div>
+  <h1>อะไรทำให้พ่อแม่วัยรุ่นเข้าถึงบริการ 4 มิติได้อย่างต่อเนื่อง</h1>
+  <p class="subtitle">คำถามวิจัย: ปฏิสัมพันธ์ระหว่างเงื่อนไขชีวิตของพ่อแม่วัยรุ่น กลไกการทำงานระดับพื้นที่ และโครงสร้างระบบและนโยบาย อธิบายได้อย่างไรว่าทำไมการเข้าถึงบริการ 4 มิติอย่างต่อเนื่องจึงเกิดขึ้นได้แตกต่างกันใน 5 พื้นที่นำร่อง? — แผนภาพนี้สร้างจากแหล่งข้อมูลที่ให้มาเท่านั้น (CLD Evidence Base ฉบับแก้ไข, S01: 25 ตัวแปร, 41 รายการความสัมพันธ์) ทุกลิงก์และขั้วมาจากตาราง 3 ของเอกสาร ส่วนลูปเป็นการคำนวณจากลิงก์และระบุไว้เป็นข้อสันนิษฐาน</p>
+  <div class="toolbar">
+    <div class="hint">ลากโหนดเพื่อจัดตำแหน่ง · ลากเส้นเชื่อมเพื่อดัดโค้ง · ชี้ที่โหนดเพื่อดูนิยาม · ชี้หรือคลิกลูป (ป้าย R/B หรือการ์ดลูป) เพื่อไฮไลต์ (Drag nodes to rearrange · drag any connection to bend it · hover for definitions)</div>
+    <div class="btns"><button class="btn solid" id="bPng">Download PNG</button><button class="btn outline" id="bCsv">Export Variables</button></div>
+  </div>
+  <div class="loopbar" id="loopBar"><span><b class="lbt"></b><span class="lbc"></span></span><button class="btn outline">แสดงทั้งหมด</button></div>
+  <div id="stage">
+    <svg id="cld" viewBox="0 0 1560 1150" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--edge-color)"></path>
+        </marker>
+      </defs>
+      <g id="gEdges"></g><g id="gHits"></g><g id="gLabels"></g><g id="gNodes"></g><g id="gBadges"></g><g id="gHandles"></g>
+    </svg>
+  </div>
+  <div class="panel legend">
+    <div class="lrow" id="legCats"><span class="lt">System area</span></div>
+    <div class="lrow"><span class="lt">Relationships</span>
+      <span class="sw"><svg width="46" height="12"><line x1="2" y1="6" x2="44" y2="6" stroke="#4b5563" stroke-width="1.8"></line></svg>+ เปลี่ยนทิศเดียวกัน (เส้นทึบ)</span>
+      <span class="sw"><svg width="46" height="12"><line x1="2" y1="6" x2="44" y2="6" stroke="#4b5563" stroke-width="1.8" stroke-dasharray="6,5"></line></svg>− เปลี่ยนทิศตรงข้าม (เส้นประ)</span>
+      <span class="sw"><svg width="46" height="12"><line x1="2" y1="6" x2="44" y2="6" stroke="#4b5563" stroke-width="3.6"></line></svg>เส้นหนา = อยู่ในลูปที่แสดง</span>
+      <span class="sw"><svg width="30" height="30"><circle cx="15" cy="15" r="12" fill="#fff" stroke="#b8791f" stroke-width="1.5"></circle><text x="15" y="15" font-family="Georgia,serif" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="middle">R</text></svg>R = ลูปเสริมแรง (จำนวน − เป็นคู่) · B = ลูปสมดุล (จำนวน − เป็นคี่)</span>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="panel"><h2>Variables identified</h2><div id="varList"></div></div>
+    <div class="panel"><h2>Feedback loops found</h2><div class="note" style="margin:-6px 0 8px">ชี้ที่ลูปเพื่อไฮไลต์ใน CLD · คลิกเพื่อค้างไว้ (คลิกซ้ำหรือกด Esc เพื่อยกเลิก)</div><div id="loopList"></div>
+      <div class="assump"><h2>Assumptions &amp; interpretive choices</h2><ol id="assList"></ol></div>
+    </div>
+  </div>
+</div>
+<div id="tip"><div class="tt"></div><div class="tb"></div><div class="tm"></div></div>
+<div id="modal"><div class="card"><div class="mt"></div><div class="mn"></div><div class="prev"></div><div class="mb"></div></div></div>
+<script>
+const DATA = {"nodes": [{"id": "V001", "name": "(V001) ระดับการตีตราทางสังคมต่อพ่อแม่วัยรุ่น", "en": "Social stigma toward teen parents", "desc": "ระดับการตัดสิน ประจาน นินทา หรืออคติต่อพ่อแม่วัยรุ่น ทั้งจากชุมชน ครอบครัว และผู้ปฏิบัติงาน", "page": "11 (เพิ่มเติม: 12, 191)", "cat": "community", "x": 110, "y": 440}, {"id": "V002", "name": "(V002) ระดับความกลัวของพ่อแม่วัยรุ่นต่อการถูกตำหนิ ตีตรา", "en": "Teen parents' fear (of stigma, family blame)", "desc": "ระดับความกลัวที่พ่อแม่วัยรุ่นรายงาน ซึ่งรายงานจำแนกเป็น 5 ด้าน", "page": "12 (เพิ่มเติม: 191)", "cat": "teen", "x": 330, "y": 420}, {"id": "V003", "name": "(V003) ระดับการเปิดเผยข้อมูลและการกล้าขอความช่วยเหลือของพ่อแม่วัยรุ่น", "en": "Teen parents' disclosure and help-seeking", "desc": "ระดับที่พ่อแม่วัยรุ่นยอมเปิดเผยสถานการณ์/ข้อมูลที่ละเอียดอ่อน และเข้าหาหรือขอความช่วยเหลือจากหน่วยงาน", "page": "191 (เพิ่มเติม: 10, 241)", "cat": "teen", "x": 300, "y": 610}, {"id": "V004", "name": "(V004) ระดับความไว้วางใจของพ่อแม่วัยรุ่นต่อผู้ให้บริการ/ผู้ปฏิบัติงาน", "en": "Teen parents' trust in service providers", "desc": "ระดับที่พ่อแม่วัยรุ่นรู้สึกปลอดภัย ไว้วางใจ และไม่ถูกตัดสินเมื่อติดต่อกับผู้ให้บริการ", "page": "236 (เพิ่มเติม: 12, 216–217)", "cat": "teen", "x": 500, "y": 760}, {"id": "V005", "name": "(V005) ระดับทัศนคติไม่ตัดสินของผู้ปฏิบัติงาน", "en": "Non-judgmental attitude of workers", "desc": "ระดับที่ผู้ปฏิบัติงานรับฟังโดยไม่ตัดสิน/ไม่ตีตรา และมองพ่อแม่วัยรุ่นเป็นผู้มีศักยภาพ", "page": "10 (เพิ่มเติม: 194, 209)", "cat": "service", "x": 110, "y": 780}, {"id": "V006", "name": "(V006) ความถี่ของการเยี่ยมบ้านและครอบครัวพ่อแม่วัยรุ่น", "en": "Frequency of home visits", "desc": "ปริมาณการลงเยี่ยมบ้าน/พูดคุยใกล้ชิดระหว่างผู้ปฏิบัติงานกับพ่อแม่วัยรุ่นและครอบครัว", "page": "194 (เพิ่มเติม: 216, 236)", "cat": "service", "x": 140, "y": 1010}, {"id": "V007", "name": "(V007) ระดับการมีส่วนร่วมของคนในพื้นที่ในการทำงานพ่อแม่วัยรุ่น", "en": "Engagement of local community actors in surveillance and outreach", "desc": "จำนวน/ความเข้มแข็งของคนในชุมชนที่ทำหน้าที่เฝ้าระวัง ค้นหา และเข้าถึงพ่อแม่วัยรุ่น", "page": "9 (เพิ่มเติม: 193–195)", "cat": "community", "x": 500, "y": 960}, {"id": "V008", "name": "(V008) ระดับการเชื่อมโยงข้อมูลข้ามหน่วยงาน", "en": "Cross-agency data linkage", "desc": "ระดับที่ฐานข้อมูล (เงินอุดหนุนเด็กแรกเกิด, TZD, ฝากครรภ์/คลอด ฯลฯ) ถูกเชื่อมและอัปเดตร่วมกัน", "page": "10 (เพิ่มเติม: 222, 243)", "cat": "policy", "x": 1060, "y": 90}, {"id": "V009", "name": "(V009) ความครอบคลุมและความเร็วในการค้นพบพ่อแม่วัยรุ่น", "en": "Coverage and speed of identifying teen parents", "desc": "สัดส่วน/ความเร็วที่พ่อแม่วัยรุ่นในพื้นที่ถูกระบุตัวและนำเข้าสู่ระบบ", "page": "211 (เพิ่มเติม: 10, 210)", "cat": "service", "x": 1080, "y": 560}, {"id": "V010", "name": "(V010) ศักยภาพของหน่วยงานภาคประชาสังคมในพื้นที่", "en": "Capacity of CSO", "desc": "การมีและความเข้มแข็งของคน/องค์กรที่เชื่อมนโยบาย ทรัพยากร และบริการไปถึงครอบครัว", "page": "11 (เพิ่มเติม: 195, 197, 237, 239)", "cat": "community", "x": 600, "y": 400}, {"id": "V011", "name": "(V011) ระดับการเข้าถึงและใช้บริการ 4 มิติของพ่อแม่วัยรุ่น", "en": "Teen parents' receipt and use of 4-dimension services", "desc": "ระดับที่บริการ/ความช่วยเหลือด้านสุขภาพ การศึกษา สังคม และเศรษฐกิจไปถึงและถูกใช้โดยพ่อแม่วัยรุ่น", "page": "14 (เพิ่มเติม: 235–236)", "cat": "outcome", "x": 800, "y": 560}, {"id": "V012", "name": "(V012) ภาระงานของเจ้าหน้าที่และคนทำงานในพื้นที่", "en": "Workload of staff and community workers", "desc": "ปริมาณงานต่อกำลังคนของเจ้าหน้าที่/อาสาสมัคร", "page": "9 (เพิ่มเติม: 11, 240)", "cat": "service", "x": 230, "y": 270}, {"id": "V013", "name": "(V013) ความต่อเนื่องของการดูแลและติดตามเคส", "en": "Continuity of care and case follow-up", "desc": "ระดับที่พ่อแม่วัยรุ่นได้รับการติดตามต่อเนื่องโดยไม่ตกหล่นเมื่อเปลี่ยนผ่านหน่วยงาน (รวมคำว่า “เคสตกหล่น” “หลุดจากระบบบริการ” ไว้เป็นทิศตรงข้าม)", "page": "196 (เพิ่มเติม: 11, 14)", "cat": "service", "x": 800, "y": 290}, {"id": "V014", "name": "(V014) ระดับการทำงานแยกส่วนระหว่างหน่วยงาน/กระทรวง", "en": "Inter-agency fragmentation", "desc": "ระดับที่หน่วยงานทำงานตามกรอบของตนโดยไม่ส่งต่อข้อมูล/ประสานกัน", "page": "196 (เพิ่มเติม: 11)", "cat": "policy", "x": 760, "y": 90}, {"id": "V015", "name": "(V015) การมีผู้ช่วยเลี้ยงดูบุตร (ครอบครัวหรือสถานรับเลี้ยงเด็ก)", "en": "Availability of childcare support (family or childcare facility)", "desc": "ระดับที่พ่อแม่วัยรุ่นมีคนหรือสถานที่ช่วยเลี้ยงลูกที่เข้าถึงได้", "page": "11 (เพิ่มเติม: 192, 237, 244)", "cat": "family", "x": 1360, "y": 520}, {"id": "V016", "name": "(V016) ระดับการยอมรับและความสัมพันธ์ที่ดีในครอบครัว", "en": "Family acceptance and relationship quality", "desc": "ระดับที่ครอบครัวยอมรับ สื่อสารดี และสนับสนุนพ่อแม่วัยรุ่น", "page": "12–13 (เพิ่มเติม: 8, 191)", "cat": "family", "x": 1360, "y": 320}, {"id": "V017", "name": "(V017) ระดับการเข้าร่วม/กลับเข้าสู่การศึกษาของพ่อแม่วัยรุ่น", "en": "Teen parents' participation in education", "desc": "สัดส่วนพ่อแม่วัยรุ่นที่ยังเรียนหรือกลับเข้าเรียน (รวมการศึกษาทางเลือก)", "page": "8 (เพิ่มเติม: 13, 192)", "cat": "family", "x": 1400, "y": 900}, {"id": "V018", "name": "(V018) ระดับการรับรู้สิทธิสวัสดิการของพ่อแม่วัยรุ่น", "en": "Teen parents' awareness of rights and entitlements", "desc": "ระดับที่พ่อแม่วัยรุ่นรู้จักสิทธิและวิธีเข้าถึงสิทธิ", "page": "12 (เพิ่มเติม: 8, 192)", "cat": "teen", "x": 960, "y": 1060}, {"id": "V019", "name": "(V019) ระดับความเพียงพอของรายได้ของพ่อแม่วัยรุ่น", "en": "Sufficiency of teen parents' income", "desc": "รายได้เทียบกับค่าใช้จ่ายจำเป็นของครอบครัว", "page": "193 (เพิ่มเติม: 13)", "cat": "family", "x": 1150, "y": 820}, {"id": "V020", "name": "(V020) ระดับทักษะการจัดการการเงินของพ่อแม่วัยรุ่น", "en": "Teen parents' financial management skills", "desc": "ทักษะการวางแผนรายรับรายจ่ายและการออม", "page": "193 (เพิ่มเติม: 240)", "cat": "family", "x": 1180, "y": 1070}, {"id": "V021", "name": "(V021) ระดับการมีทางเลือกการศึกษาที่ยืดหยุ่น", "en": "Availability of flexible education options", "desc": "ระดับที่ระบบการศึกษาปรับเวลา สถานที่ และรูปแบบให้เรียนควบคู่กับการเลี้ยงลูก/ทำงานได้", "page": "192 (เพิ่มเติม: 11, 197, 241)", "cat": "policy", "x": 1420, "y": 1070}, {"id": "V022", "name": "(V022) ระดับการรับรองอย่างเป็นทางการในการทำงานพ่อแม่วัยรุ่นระดับจังหวัด", "en": "Formal institutional endorsement", "desc": "ระดับที่ประเด็นพ่อแม่วัยรุ่นได้รับการรับรองผ่านคำสั่ง แผน หรือนโยบายของหน่วยงาน", "page": "195 (เพิ่มเติม: 221, 228)", "cat": "policy", "x": 150, "y": 90}, {"id": "V023", "name": "(V023) ระดับงบประมาณและค่าตอบแทนสนับสนุนการทำงานอย่างต่อเนื่อง", "en": "Continuity of budget and incentives for frontline work", "desc": "งบประมาณ/ค่าตอบแทนที่ได้รับจัดสรรต่อเนื่องและเบิกจ่ายได้ชัดเจน", "page": "195 (เพิ่มเติม: 14)", "cat": "policy", "x": 420, "y": 90}, {"id": "V024", "name": "(V024) ระดับอุปสรรคเชิงขั้นตอนในการรับบริการ", "en": "Procedural barriers to services", "desc": "ระดับที่สถานบริการเรียกเอกสาร/ความยินยอมเกินกว่าที่กฎหมายกำหนดก่อนให้บริการ", "page": "13 (เพิ่มเติม: 9, 196, 228)", "cat": "policy", "x": 1350, "y": 90}, {"id": "V025", "name": "(V025) จำนวนแกนนำพ่อแม่วัยรุ่น/แกนนำเยาวชนที่ทำงานแบบเพื่อนชวนเพื่อน", "en": "Number of peer leaders (teen-parent or youth leaders)", "desc": "จำนวนพ่อแม่วัยรุ่นหรือเยาวชนที่ทำหน้าที่แกนนำ/พี่เลี้ยงเพื่อเชื่อมต่อกับพ่อแม่วัยรุ่นคนอื่น", "page": "237 (เพิ่มเติม: 8, 217, 242)", "cat": "community", "x": 790, "y": 860}], "links": [{"s": "V001", "t": "V003", "p": "-", "strength": "High", "conf": "High", "claim": "การตีตราทางสังคม (รวมถึงจากผู้ปฏิบัติงาน) ทำให้พ่อแม่วัยรุ่นไม่กล้าเปิดเผยข้อมูลหรือเข้าสู่ระบบบริการ", "page": "11 (เพิ่มเติม: 191)"}, {"s": "V002", "t": "V003", "p": "-", "strength": "High", "conf": "High", "claim": "ความกลัวเป็นอุปสรรคด่านแรกที่ทำให้พ่อแม่วัยรุ่นปิดบังข้อมูลและขอความช่วยเหลือล่าช้า และเมื่อความกลัวลดลง เด็กจะกล้าขอความช่วยเหลือ", "page": "12 (เพิ่มเติม: 191)"}, {"s": "V002", "t": "V011", "p": "-", "strength": "Medium", "conf": "High", "claim": "ความกลัวการถูกตีตราทำให้แม่วัยรุ่นปฏิเสธการคัดกรอง/ดูแลสุขภาพจิต และหลีกเลี่ยงการฝากครรภ์ตามนัด", "page": "191 (เพิ่มเติม: 12, 241)"}, {"s": "V004", "t": "V003", "p": "+", "strength": "High", "conf": "High", "claim": "เมื่อพ่อแม่วัยรุ่นคุ้นเคยและไว้วางใจ จะกล้าเปิดใจ ให้ข้อมูลที่ละเอียดอ่อน และขอความช่วยเหลือมากขึ้น", "page": "241 (เพิ่มเติม: 10, 12)"}, {"s": "V004", "t": "V011", "p": "+", "strength": "High", "conf": "High", "claim": "การเข้าถึงและการใช้ความช่วยเหลือ 4 มิติเกิดขึ้นได้เมื่อพ่อแม่วัยรุ่นไว้วางใจผู้ให้บริการ", "page": "236 (เพิ่มเติม: 14, 216)"}, {"s": "V005", "t": "V003", "p": "+", "strength": "Medium", "conf": "High", "claim": "เมื่อผู้ปฏิบัติงานไม่ตีตราและไม่ตัดสิน พ่อแม่วัยรุ่นจะเปิดใจและร่วมมือมากขึ้น", "page": "209"}, {"s": "V005", "t": "V011", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การเปลี่ยนจากการตัดสินไปสู่การรับฟังอย่างไม่ตัดสินทำให้คนทำงานเข้าถึงและช่วยเหลือพ่อแม่วัยรุ่นได้จริง", "page": "10"}, {"s": "V006", "t": "V005", "p": "+", "strength": "High", "conf": "High", "claim": "การเยี่ยมบ้านและการทำงานใกล้ชิดกับครอบครัวจริงเปลี่ยนทัศนคติของคนทำงานไปสู่การรับฟังโดยไม่ตัดสิน มากกว่าการอบรมเพียงอย่างเดียว", "page": "194 (เพิ่มเติม: 10)"}, {"s": "V006", "t": "V004", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การเยี่ยมบ้านเป็นโอกาสสร้างความสัมพันธ์และความคุ้นเคย ซึ่งเปิดพื้นที่ให้เด็กพูดถึงปัญหาที่ไม่กล้าบอกในสถานบริการ", "page": "236 (เพิ่มเติม: 216)"}, {"s": "V006", "t": "V018", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การให้ข้อมูลสิทธิผ่านการเยี่ยมบ้านและพี่เลี้ยงชุมชนเพิ่มการรู้จักสิทธิของพ่อแม่วัยรุ่น", "page": "12 (เพิ่มเติม: 8)"}, {"s": "V007", "t": "V009", "p": "+", "strength": "High", "conf": "High", "claim": "คนในพื้นที่ (อสม. อพม. ผู้นำชุมชน พี่เลี้ยง) เป็นด่านแรกที่ค้นพบและเชื่อมโยงความช่วยเหลือได้เร็วที่สุด", "page": "9 (เพิ่มเติม: 193–195)"}, {"s": "V007", "t": "V004", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การมีคนในพื้นที่ที่คุ้นเคยและได้รับความไว้วางใจเป็นผู้เข้าถึง ช่วยให้การค้นหาและช่วยเหลือเกิดขึ้นได้จริง", "page": "9"}, {"s": "V007", "t": "V002", "p": "+", "strength": "Low", "conf": "Medium", "claim": "ในพะเยา พี่เลี้ยงเป็นคนในหมู่บ้านเดียวกับกลุ่มเป้าหมาย ซึ่งกลัวถูกนินทาในหมู่บ้านเป็นอันดับต้น จึงต้องให้ทีมสหวิชาชีพลงไปสร้างความไว้วางใจก่อน", "page": "216"}, {"s": "V007", "t": "V013", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การดึงคนทำงานตัวจริงในชุมชนมาเป็นภาคีทำให้การดูแลช่วยเหลือยังคงดำเนินต่อไปได้หลังจบโครงการ", "page": "195"}, {"s": "V008", "t": "V009", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การเชื่อมและอัปเดตข้อมูล 3 แหล่งร่วมกันช่วยให้ระบุตัวและเข้าถึงพ่อแม่วัยรุ่นได้ครอบคลุมและรวดเร็วขึ้น", "page": "10 (เพิ่มเติม: 222, 236)"}, {"s": "V008", "t": "V013", "p": "+", "strength": "Not established", "conf": "Medium", "claim": "ระบบข้อมูลกลางร่วมระหว่างหน่วยงานจะช่วยป้องกันไม่ให้เคสตกหล่นเมื่อเปลี่ยนผ่านหน่วยงาน", "page": "243"}, {"s": "V009", "t": "V011", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "พื้นที่ที่ค้นหาเชิงรุกนำเด็กเข้าสู่กระบวนการช่วยเหลือได้ตั้งแต่ต้น", "page": "211"}, {"s": "V010", "t": "V011", "p": "+", "strength": "High", "conf": "High", "claim": "การมี “ข้อต่อ”/องค์กรพี่เลี้ยงทำให้ทรัพยากร นโยบาย และบริการไปถึงครอบครัวจริง; ขาดข้อต่อแล้วแม้มีกลไกจังหวัดก็เข้าไม่ถึงครอบครัว", "page": "11 (เพิ่มเติม: 195, 197, 237, 239)"}, {"s": "V010", "t": "V013", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "หากขาดองค์กรตัวกลางคอยประคับประคองผู้ปฏิบัติงานระดับล่าง งานหน้างานจะติดขัดและไม่สามารถติดตามผลลัพธ์กับกลุ่มเป้าหมายได้", "page": "239"}, {"s": "V010", "t": "V013", "p": "-", "strength": "Low", "conf": "Low", "claim": "พื้นที่ที่ภาคประชาสังคม/ชุมชนนำมีข้อจำกัดด้านความต่อเนื่องเมื่อกลไกพึ่งพาบุคคลหรือองค์กรพี่เลี้ยง", "page": "235"}, {"s": "V012", "t": "V013", "p": "-", "strength": "High", "conf": "High", "claim": "ภาระงานที่ล้นมือของเจ้าหน้าที่และคนทำงานในพื้นที่เป็นอุปสรรคต่อการติดตามดูแลเคสอย่างต่อเนื่องในระยะยาว", "page": "9 (เพิ่มเติม: 11, 195)"}, {"s": "V012", "t": "V011", "p": "-", "strength": "Low", "conf": "Medium", "claim": "บ้านพักเด็กฯ มีทรัพยากรจำกัด (เจ้าหน้าที่ 3 คนดูแล 23 อำเภอ) จึงเน้นเฉพาะเคสเร่งด่วน/ซับซ้อน การส่งต่อแล้วจบจึงไม่ทำให้เด็กได้รับการดูแลต่อเนื่อง", "page": "240"}, {"s": "V014", "t": "V013", "p": "-", "strength": "High", "conf": "High", "claim": "การทำงานแยกส่วนตามกระทรวง/การไม่ส่งต่อข้อมูลเมื่อเคสเปลี่ยนหน่วยงาน ทำให้เกิดเคสตกหล่น", "page": "196 (เพิ่มเติม: 11, 14)"}, {"s": "V015", "t": "V017", "p": "+", "strength": "High", "conf": "High", "claim": "การไม่มีผู้ช่วยเลี้ยงดูบุตรเป็นอุปสรรคสำคัญที่สุดต่อการกลับเข้าสู่ระบบการศึกษา", "page": "192 (เพิ่มเติม: 8, 13, 237)"}, {"s": "V015", "t": "V019", "p": "+", "strength": "High", "conf": "High", "claim": "ภาระการเลี้ยงดูบุตรเมื่อไม่มีผู้ช่วยเลี้ยงทำให้พ่อแม่วัยรุ่นทำงานไม่ได้และไม่มีรายได้ของตนเอง", "page": "193 (เพิ่มเติม: 11, 244)"}, {"s": "V016", "t": "V015", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "เมื่อครอบครัวยอมรับ ครอบครัวกลายเป็นระบบสนับสนุนหลักที่ช่วยเลี้ยงดูบุตร ทำให้กลับไปเรียนหรือทำงานได้", "page": "12–13 (เพิ่มเติม: 191)"}, {"s": "V018", "t": "V011", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การรู้จักสิทธิช่วยให้พ่อแม่วัยรุ่นเข้าถึงสิทธิสวัสดิการที่มีอยู่แล้ว (การไม่รู้สิทธิเป็นอุปสรรคต่อการเข้าถึง)", "page": "12 (เพิ่มเติม: 8, 192)"}, {"s": "V019", "t": "V017", "p": "+", "strength": "High / Medium", "conf": "High", "claim": "รายได้ที่จำกัดทำให้พ่อแม่วัยรุ่นไม่มีเงินและเวลาพอจะกลับไปเรียน และต้องเลือกทำงานหาเงินก่อนเสมอ / คณะทำงานสะท้อนว่าพ่อแม่วัยรุ่นมีความรู้เรื่องการออมแล้ว แต่วางแผนได้จำกัดเพราะรายได้ไม่พอ จึงไม่สามารถทำแผนพัฒนาตนเองหรือเรียนต่อได้", "page": "13 (เพิ่มเติม: 192); 193"}, {"s": "V020", "t": "V017", "p": "+", "strength": "Low", "conf": "Medium", "claim": "การขาดทักษะการวางแผนการเงินทำให้รายได้เกือบทั้งหมดหมดไปกับค่าใช้จ่าย จนแผนพัฒนาตนเองหรือการเรียนต่อถูกพับเก็บ", "page": "193"}, {"s": "V021", "t": "V017", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การศึกษาที่ยืดหยุ่น (เช่น โรงเรียนมือถือผ่านความร่วมมือ กสศ.) ช่วยให้พ่อแม่วัยรุ่นเรียนควบคู่กับการเลี้ยงลูกได้", "page": "11 (เพิ่มเติม: 197, 241)"}, {"s": "V022", "t": "V023", "p": "+", "strength": "Medium", "conf": "High", "claim": "การรับรองอย่างเป็นทางการ (แผนยุทธศาสตร์หน่วยงาน/คำสั่งจังหวัด) ช่วยลดแรงต้านและเปิดทางให้จัดสรรงบประมาณต่อเนื่อง", "page": "195 (เพิ่มเติม: 221, 228)"}, {"s": "V023", "t": "V013", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "หากไม่มีค่าตอบแทน/รางวัลหนุนเสริมเป็นระยะ ความกระตือรือร้นในการติดตามงานในพื้นที่จะลดลง", "page": "195"}, {"s": "V024", "t": "V011", "p": "-", "strength": "Medium", "conf": "High", "claim": "การที่สถานพยาบาลเรียกใบยินยอมผู้ปกครอง/เอกสารส่งตัว เป็นกำแพงที่ทำให้วัยรุ่นจำนวนมากเข้าไม่ถึงบริการคุมกำเนิด; การลดขั้นตอน (ใช้เลข 13 หลัก) ทำให้ฝังยาคุมได้ทุกสถานพยาบาลในจังหวัด", "page": "13 (เพิ่มเติม: 9, 228)"}, {"s": "V024", "t": "V013", "p": "-", "strength": "Low", "conf": "Medium", "claim": "ความยุ่งยากเรื่องการขอความยินยอมจากผู้ปกครองอาจทำให้เด็กจำนวนหนึ่งหลุดจากระบบบริการและเสี่ยงต่อการตั้งครรภ์ซ้ำ", "page": "196"}, {"s": "V025", "t": "V007", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "การดึงพ่อแม่วัยรุ่นที่ผ่านกระบวนการมาเป็นแกนนำ/พี่เลี้ยงรุ่นต่อไปช่วยให้เครือข่ายในพื้นที่เติบโตต่อได้", "page": "237 (เพิ่มเติม: 8)"}, {"s": "V025", "t": "V003", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "แกนนำเยาวชนที่สนิทกันชวนซ้ำ ๆ (เพื่อนชวนเพื่อน) ช่วยให้วัยรุ่นเปิดใจ เพราะเปิดใจกับคนวัยเดียวกันได้ดีกว่า", "page": "217"}, {"s": "V025", "t": "V009", "p": "+", "strength": "Not established", "conf": "Medium", "claim": "ขอนแก่นวางแผนตั้งกลุ่มแลกเปลี่ยนให้วัยรุ่นที่ผ่านวิกฤตมาได้เป็นกระบอกเสียงและดึงเพื่อนแม่วัยรุ่นรายใหม่เข้ามารับความช่วยเหลือ", "page": "224"}, {"s": "V011", "t": "V025", "p": "+", "strength": "Low", "conf": "Medium", "claim": "การได้รับการหนุนเสริมทำให้พ่อแม่วัยรุ่นบางรายได้รับการยอมรับและเข้ามาเป็นส่วนหนึ่งของกลไกชุมชน", "page": "194 (เพิ่มเติม: 191)"}, {"s": "V003", "t": "V009", "p": "+", "strength": "Low", "conf": "Low", "claim": "ช่องทางที่วัยรุ่นติดต่อเข้ามาเอง (เพจออนไลน์/เดินเข้ามาขอรับบริการ) เป็นหนึ่งในช่องทางการค้นพบเคส", "page": "216"}, {"s": "V003", "t": "V011", "p": "+", "strength": "Medium", "conf": "Medium", "claim": "เมื่อพ่อแม่วัยรุ่นเปิดใจและร่วมมือ ผู้ปฏิบัติงานจะประเมินปัญหาและเชื่อมต่อความช่วยเหลือที่เหมาะสมกับแต่ละคนได้", "page": "209 (เพิ่มเติม: 217)"}]};
+const CATS = [
+  {key:'teen', label:'พ่อแม่วัยรุ่น (การรับรู้ ความกลัว การเปิดใจ)'},
+  {key:'family', label:'ครอบครัว เศรษฐกิจ และการศึกษา'},
+  {key:'community', label:'ชุมชนและเครือข่ายในพื้นที่'},
+  {key:'service', label:'การจัดบริการและผู้ปฏิบัติงาน'},
+  {key:'policy', label:'ระบบ ข้อมูล และนโยบาย'},
+  {key:'outcome', label:'ผลลัพธ์ (Hub)'}
+];
+const HUB = 'V011';
+const LOOPS = [
+  {id:'R1', fixed:[960,745], type:'R', members:['V007','V009','V011','V025'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — คำนวณจากลิงก์แยก: V007→V009 (High, น.9), V009→V011 (Medium, น.211), V011→V025 (Low, กรณีเดียว น.194), V025→V007 (Medium, น.237)'},
+  {id:'R2', fixed:[565,665], type:'R', members:['V003','V011','V025'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — V003→V011 (Medium, น.209), V011→V025 (Low, น.194), V025→V003 (Medium, กรณีกรุงเทพฯ น.217)'},
+  {id:'R3', fixed:[650,815], type:'R', members:['V004','V011','V025','V007'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — V004→V011 (High, น.236), V011→V025 (Low), V025→V007 (Medium), V007→V004 (Medium, น.9; มีหลักฐานขัดแย้ง น.216)'},
+  {id:'R4', fixed:[875,655], type:'R', members:['V003','V009','V011','V025'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — V003→V009 (Low, น.216), V009→V011 (Medium), V011→V025 (Low), V025→V003 (Medium)'},
+  {id:'B1', fixed:[560,505], type:'B', members:['V002','V011','V025','V007'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — V002→V011 (−, Medium, น.191), V011→V025 (Low), V025→V007 (Medium), V007→V002 (+, Low, กรณีพะเยา น.216 — ขัดแย้งกับ น.9)'},
+  {id:'B2', fixed:[430,520], type:'B', members:['V002','V003','V011','V025','V007'], note:'ไม่ได้ระบุเป็นลูปในแหล่ง — V002→V003 (−, High, น.12), V003→V011 (Medium), V011→V025 (Low), V025→V007 (Medium), V007→V002 (+, Low)'}
+];
+const ASSUMPTIONS = [
+  'แหล่งข้อมูลเดียวคือ CLD Evidence Base ฉบับแก้ไขที่ผู้ใช้อัปโหลด (อ้างอิงเอกสาร S01) ใช้ชื่อตัวแปรภาษาไทยตามตาราง 2 ฉบับแก้ไข และคงรหัส V001–V025 ตามต้นฉบับ ชื่ออังกฤษ นิยาม และหน้าอ้างอิงแสดงใน tooltip',
+  'Hub คือ (V011) ระดับการเข้าถึงและใช้บริการ 4 มิติของพ่อแม่วัยรุ่น เลือกจากถ้อยคำที่ใกล้คำถามวิจัยที่สุด ส่วน “ความต่อเนื่อง” ในคำถามวิจัยแทนด้วย V013 ซึ่งวางไว้ใกล้ hub; ในหลักฐานไม่มีลิงก์ตรงระหว่าง V013 กับ V011',
+  'ความละเอียดของแผนที่: ผู้ใช้เลือกแสดงทุกตัวแปร (25 จาก 25) จึงไม่มีตัวแปรที่ถูกตัดออก',
+  'การจัดหมวด (System area) 5 หมวดและ Outcome เป็นการจัดกลุ่มเชิงตีความของผู้จัดทำ ตามกรอบสามระดับ (ตัวพ่อแม่วัยรุ่น/ครอบครัว · การทำงานในพื้นที่ · ระบบและนโยบาย) ไม่ได้มาจากแหล่งโดยตรง',
+  'ตาราง 3 มี 41 รายการ วาดเป็น 40 เส้น: V019 → V017 (+) มี 2 รายการ (หน้า 13 และ 193) รวมเป็นเส้นเดียว',
+  'V010 → V013 มีหลักฐานขัดแย้งในแหล่ง จึงวาดทั้งสองเส้นโค้งคนละด้าน: (+) Medium หน้า 239 และ (−) Low หน้า 235 (ต่างกันที่กรอบเวลา)',
+  'ชื่อ V010 ในตาราง 2 ฉบับแก้ไขเปลี่ยนเป็น “ศักยภาพของหน่วยงานภาคประชาสังคมในพื้นที่ (Capacity of CSO)” แต่ข้อความในตาราง 3 ยังกล่าวถึง “ข้อต่อ/องค์กรพี่เลี้ยง” — แผนภาพใช้ชื่อตามตาราง 2 และคงลิงก์ตามตาราง 3',
+  'มีลิงก์ Not established 2 เส้นที่ยังวาดไว้ (V008 → V013 ข้อเสนอที่ยังไม่มีระบบ; V025 → V009 แผนในอนาคต) ดูระดับหลักฐานได้จาก tooltip ของเส้น ส่วนลิงก์ Low อีก 7 เส้นก็วาดไว้เช่นกัน',
+  'แหล่งข้อมูลไม่ได้ระบุลูปป้อนกลับใดๆ ลูปทั้งหมดคำนวณจากลิงก์แยก (วงจรที่ผ่านแต่ละโหนดไม่เกินครั้งเดียว) พบ 10 ลูป ทุกลูปผ่าน V011 → V025 ซึ่งมีหลักฐานระดับ Low (กรณีเดียว น้องโบว์ หน้า 194) ลูปทั้งหมดจึงเป็นสมมติฐานที่ต้องตรวจสอบ ไม่ใช่ข้อค้นพบ',
+  'แสดงป้ายลูป 6 ลูปที่สั้นและไม่ใช้ลิงก์ Not established; อีก 4 ลูปไม่ได้แสดงป้าย: (R) V009 → V011 → V025 → V009 (ใช้ V025 → V009 ซึ่ง Not established); (R) V003 → V011 → V025 → V007 → V004 → V003; (R) V003 → V009 → V011 → V025 → V007 → V004 → V003; (B) V002 → V003 → V009 → V011 → V025 → V007 → V002',
+  'กลุ่มครอบครัว/เศรษฐกิจ/การศึกษา (V015, V016, V017, V019, V020, V021) ไม่มีลิงก์ไปยัง hub ในหลักฐาน จึงแสดงเป็นระบบย่อยแยกทางขวา — เป็นช่องว่างหลักฐาน ไม่ใช่ข้อสรุปว่าไม่เกี่ยวข้อง',
+  'ตำแหน่งโหนดและความโค้งของเส้นจัดวางด้วยมือเพื่อให้อ่านง่าย ไม่มีความหมายเชิงเหตุ'
+];
+const SVGNS='http://www.w3.org/2000/svg';
+const FONT_SANS='"Inter","Helvetica Neue",Arial,sans-serif';
+const FONT_SERIF='"Iowan Old Style","Palatino Linotype",Georgia,serif';
+const svg=document.getElementById('cld');
+const W=1560,H=1150;
+const nodeById={};
+DATA.nodes.forEach(n=>{nodeById[n.id]=n;});
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+
+// ---------- label wrapping ----------
+const measureCtx=document.createElement('canvas').getContext('2d');
+measureCtx.font='600 13.5px '+FONT_SANS;
+const seg=(typeof Intl!=='undefined'&&Intl.Segmenter)?new Intl.Segmenter('th',{granularity:'word'}):null;
+function tokens(s){
+  let tk=seg?Array.from(seg.segment(s),x=>x.segment):s.split(/(\s+)/);
+  const out=[];
+  for(let i=0;i<tk.length;i++){
+    const t=tk[i];
+    if(out.length&&(/^[)\]\/,.]/.test(t)||(t==='รุ่น'&&/วัย$/.test(out[out.length-1]))||(t==='แม่'&&/พ่อ$/.test(out[out.length-1])))){out[out.length-1]+=t;continue;}
+    if(out.length&&/[(\/]$/.test(out[out.length-1])){out[out.length-1]+=t;continue;}
+    out.push(t);
+  }
+  return out;
+}
+function wrap(text,maxW,maxLines){
+  const toks=tokens(text);const lines=[];let cur='';
+  for(const t of toks){
+    const test=cur+t;
+    if(measureCtx.measureText(test.trim()).width<=maxW||cur===''){cur=test;}
+    else{lines.push(cur.trim());cur=t.trimStart();}
+  }
+  if(cur.trim())lines.push(cur.trim());
+  return lines;
+}
+function layoutLabel(n){
+  let best=null;
+  for(let w=190;w<=250;w+=10){const ls=wrap(n.name,w-20,3);const minL=Math.min.apply(null,ls.map(l=>measureCtx.measureText(l).width));const score=ls.length*1000-minL+(w-190)*0.8;if(!best||score<best.score)best={w:w,lines:ls,score:score};}
+  let w=best.w, lines=best.lines;
+  const maxLine=Math.max.apply(null,lines.map(l=>measureCtx.measureText(l).width));
+  n.w=Math.max(n.id===HUB?210:190,Math.min(w,Math.ceil(maxLine)+24));
+  if(n.id===HUB)n.w+=10;
+  n.lines=lines;
+  n.h=Math.max(n.id===HUB?78:(lines.length===1?52:64),lines.length*16+(n.id===HUB?30:22));
+}
+DATA.nodes.forEach(layoutLabel);
+
+// ---------- loops / edges ----------
+const loopEdgeSet=new Set();
+LOOPS.forEach(L=>{
+  L.chainIds=orderLoop(L.members);
+  for(let i=0;i<L.chainIds.length;i++){const a=L.chainIds[i],b=L.chainIds[(i+1)%L.chainIds.length];loopEdgeSet.add(a+'>'+b);}
+});
+function orderLoop(mem){
+  // find the cycle order using available links among members (each node once)
+  const set=new Set(mem);const adj={};
+  DATA.links.forEach(l=>{if(set.has(l.s)&&set.has(l.t)){(adj[l.s]=adj[l.s]||[]).push(l.t);}});
+  const start=mem[0];let found=null;
+  (function dfs(cur,path){if(found)return;(adj[cur]||[]).forEach(nx=>{if(found)return;if(nx===start&&path.length===mem.length){found=path.slice();return;}if(path.indexOf(nx)<0)dfs(nx,path.concat([nx]));});})(start,[start]);
+  return found||mem;
+}
+LOOPS.forEach(L=>{
+  let neg=0;const ids=L.chainIds;
+  for(let i=0;i<ids.length;i++){const a=ids[i],b=ids[(i+1)%ids.length];const lk=DATA.links.find(l=>l.s===a&&l.t===b&&(!(a==='V010'&&b==='V013')||l.p==='+'));if(lk&&lk.p==='-')neg++;}
+  L.neg=neg;L.type=(neg%2===0)?'R':'B';
+  L.chainText=ids.concat([ids[0]]).map(id=>nodeById[id].name).join(' → ');
+});
+
+// pair handling: opposite / parallel links bend to different sides
+const pairCount={};
+DATA.links.forEach(l=>{const k=[l.s,l.t].sort().join('|');pairCount[k]=(pairCount[k]||0)+1;});
+const DEFAULT_BEND={
+  'V025>V003':[30,-50],'V006>V018':[0,70],'V024>V011':[30,-40],'V008>V013':[-30,-20],'V005>V011':[20,-60],
+  'V007>V002':[70,0],'V002>V011':[0,-40],'V001>V003':[0,-20],'V018>V011':[60,20],'V003>V009':[0,90],'V025>V009':[30,40],
+  'V023>V013':[0,40],'V022>V023':[0,-18],'V012>V011':[30,30],'V010>V011':[10,-20],'V011>V025':[30,0],'V004>V003':[0,0],'V007>V013':[75,0]
+};
+const edges=DATA.links.map((l,i)=>{
+  const key=l.s+'>'+l.t;
+  const e={l:l,i:i,key:key,loop:loopEdgeSet.has(key)&&!(key==='V010>V013'&&l.p==='-'),off:[0,0]};
+  const pk=[l.s,l.t].sort().join('|');
+  if(pairCount[pk]>1){
+    const A=nodeById[l.s],B=nodeById[l.t];const dx=B.x-A.x,dy=B.y-A.y,len=Math.hypot(dx,dy)||1;
+    const nx=-dy/len,ny=dx/len;const sgn=(l.p==='-'?-1:1)*(l.s<l.t?1:-1);
+    const k2=(l.s===l.t?0:(l.s<l.t?1:-1));
+    const side=(key==='V010>V013')?(l.p==='+'?1:-1):k2;
+    e.off=[nx*45*side,ny*45*side];
+  } else if(DEFAULT_BEND[key]){e.off=DEFAULT_BEND[key].slice();}
+  return e;
+});
+
+// ---------- build SVG ----------
+const gE=document.getElementById('gEdges'),gHit=document.getElementById('gHits'),gL=document.getElementById('gLabels'),gN=document.getElementById('gNodes'),gB=document.getElementById('gBadges'),gHd=document.getElementById('gHandles');
+edges.forEach(e=>{
+  e.path=el('path',{fill:'none',stroke:'var(--edge-color)','stroke-width':e.loop?3.6:1.8,'stroke-opacity':e.loop?1:.85,'marker-end':'url(#arrow)'},gE);
+  if(e.l.p==='-')e.path.setAttribute('stroke-dasharray','6,5');
+  e.hit=el('path',{fill:'none',stroke:'transparent','stroke-width':16,'class':'hit','data-hit':'1'},gHit);
+  e.label=el('text',{'font-family':FONT_SANS,'font-weight':'800','font-size':'17','text-anchor':'middle','dominant-baseline':'middle',fill:e.l.p==='+'?'var(--pos)':'var(--neg)'},gL);
+  e.label.textContent=e.l.p==='+'?'+':'−';
+  e.handle=el('circle',{r:9,fill:'#000','fill-opacity':0,'class':'handle','data-handle':'1'},gHd);
+  const tipText=nodeById[e.l.s].name+' → '+nodeById[e.l.t].name;
+  [e.hit,e.handle].forEach(h=>{
+    h.addEventListener('pointerdown',ev=>startBend(ev,e));
+    h.addEventListener('mouseenter',ev=>showTip(ev,'('+(e.l.p==='+'?'+':'−')+') '+tipText,e.l.claim,'Evidence: '+e.l.strength+' · Confidence: '+e.l.conf+' · S01 หน้า '+e.l.page));
+    h.addEventListener('mousemove',moveTip);h.addEventListener('mouseleave',hideTip);
+  });
+});
+DATA.nodes.forEach(n=>{
+  const g=el('g',{'class':'node','data-id':n.id},gN);
+  n.g=g;
+  n.rect=el('rect',{rx:14,ry:14,width:n.w,height:n.h,fill:'var(--cat-'+n.cat+'-fill)',stroke:'var(--cat-'+n.cat+'-stroke)','stroke-width':n.id===HUB?2.6:1.6},g);
+  n.text=el('text',{'font-family':FONT_SANS,'font-weight':'600','font-size':'13.5','text-anchor':'middle',fill:'var(--ink)'},g);
+  const total=n.lines.length*16;
+  n.lines.forEach((ln,i)=>{const t=el('tspan',{x:0,dy:i===0?0:16},n.text);t.textContent=ln;});
+  n.textY0=-total/2+12;
+  g.addEventListener('pointerdown',ev=>startDrag(ev,n));
+  g.addEventListener('mouseenter',ev=>showTip(ev,n.name,n.desc,n.en+' · S01 หน้า '+n.page));
+  g.addEventListener('mousemove',moveTip);g.addEventListener('mouseleave',hideTip);
+});
+LOOPS.forEach(L=>{
+  L.g=el('g',{},gB);
+  L.c=el('circle',{r:22,fill:'var(--panel)',stroke:'var(--loop-r)','stroke-width':1.5},L.g);
+  L.t=el('text',{'font-family':FONT_SERIF,'font-weight':'700','font-size':'15','text-anchor':'middle','dominant-baseline':'middle',fill:'var(--ink)'},L.g);
+  L.t.textContent=L.id;
+});
+
+// ---------- geometry ----------
+function borderPoint(n,tx,ty){
+  const dx=tx-n.x,dy=ty-n.y;if(dx===0&&dy===0)return [n.x,n.y];
+  const hw=n.w/2+3,hh=n.h/2+3;const s=Math.min(dx!==0?hw/Math.abs(dx):Infinity,dy!==0?hh/Math.abs(dy):Infinity);
+  return [n.x+dx*s,n.y+dy*s];
+}
+function updateEdge(e){
+  const A=nodeById[e.l.s],B=nodeById[e.l.t];
+  const mx=(A.x+B.x)/2+e.off[0],my=(A.y+B.y)/2+e.off[1];
+  // control point so that the curve passes through (mx,my)
+  const cx=2*mx-(A.x+B.x)/2,cy=2*my-(A.y+B.y)/2;
+  const p1=borderPoint(A,cx,cy),p2=borderPoint(B,cx,cy);
+  const d='M'+p1[0].toFixed(1)+','+p1[1].toFixed(1)+' Q'+cx.toFixed(1)+','+cy.toFixed(1)+' '+p2[0].toFixed(1)+','+p2[1].toFixed(1);
+  e.path.setAttribute('d',d);e.hit.setAttribute('d',d);
+  // point on curve near the end (t=.78) for label, offset sideways
+  const t=0.72,u=1-t;
+  const qx=u*u*p1[0]+2*u*t*cx+t*t*p2[0],qy=u*u*p1[1]+2*u*t*cy+t*t*p2[1];
+  const tx=2*u*(cx-p1[0])+2*t*(p2[0]-cx),ty=2*u*(cy-p1[1])+2*t*(p2[1]-cy);const tl=Math.hypot(tx,ty)||1;
+  e.label.setAttribute('x',(qx-ty/tl*13).toFixed(1));e.label.setAttribute('y',(qy+tx/tl*13).toFixed(1));
+  e.handle.setAttribute('cx',mx.toFixed(1));e.handle.setAttribute('cy',my.toFixed(1));
+}
+function updateNode(n){
+  n.g.setAttribute('transform','translate('+(n.x-n.w/2).toFixed(1)+','+(n.y-n.h/2).toFixed(1)+')');
+  n.text.setAttribute('transform','translate('+(n.w/2)+','+(n.h/2+n.textY0)+')');
+}
+function overlapsNode(x,y,pad){return DATA.nodes.some(n=>Math.abs(x-n.x)<n.w/2+pad&&Math.abs(y-n.y)<n.h/2+pad);}
+function placeBadges(){
+  const placed=[];
+  LOOPS.forEach(L=>{
+    let cx=0,cy=0;L.chainIds.forEach(id=>{cx+=nodeById[id].x;cy+=nodeById[id].y;});cx/=L.chainIds.length;cy/=L.chainIds.length;
+    if(L.manual){cx+=L.manual[0];cy+=L.manual[1];}
+    let best=[cx,cy];
+    const free=(x,y)=>!overlapsNode(x,y,26)&&placed.every(p=>Math.hypot(p[0]-x,p[1]-y)>50)&&x>25&&x<W-25&&y>25&&y<H-25;
+    if(!free(cx,cy)){
+      outer: for(let r=12;r<400;r+=8){for(let a=0;a<360;a+=15){const x=cx+r*Math.cos(a*Math.PI/180),y=cy+r*Math.sin(a*Math.PI/180);if(free(x,y)){best=[x,y];break outer;}}}
+    }
+    placed.push(best);L.pos=best;
+    L.c.setAttribute('cx',best[0].toFixed(1));L.c.setAttribute('cy',best[1].toFixed(1));
+    L.t.setAttribute('x',best[0].toFixed(1));L.t.setAttribute('y',best[1].toFixed(1));
+  });
+}
+LOOPS.forEach(L=>{if(L.fixed){let cx=0,cy=0;L.chainIds.forEach(id=>{cx+=nodeById[id].x;cy+=nodeById[id].y;});cx/=L.chainIds.length;cy/=L.chainIds.length;L.manual=[L.fixed[0]-cx,L.fixed[1]-cy];}});
+function updateAll(){DATA.nodes.forEach(updateNode);edges.forEach(updateEdge);placeBadges();}
+updateAll();
+
+// ---------- interaction ----------
+function svgPt(ev){const p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;const m=svg.getScreenCTM().inverse();const r=p.matrixTransform(m);return [r.x,r.y];}
+let drag=null,raf=0;
+function schedule(fn){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;fn();});}
+function startDrag(ev,n){
+  ev.preventDefault();hideTip();const p=svgPt(ev);drag={type:'node',n:n,dx:p[0]-n.x,dy:p[1]-n.y};n.g.classList.add('dragging');
+  svg.setPointerCapture&&svg.setPointerCapture(ev.pointerId);
+}
+function startBend(ev,e){ev.preventDefault();ev.stopPropagation();hideTip();drag={type:'edge',e:e};svg.setPointerCapture&&svg.setPointerCapture(ev.pointerId);}
+const connected={};edges.forEach(e=>{(connected[e.l.s]=connected[e.l.s]||[]).push(e);(connected[e.l.t]=connected[e.l.t]||[]).push(e);});
+svg.addEventListener('pointermove',ev=>{
+  if(!drag)return;const p=svgPt(ev);
+  if(drag.type==='node'){const n=drag.n;n.x=Math.max(n.w/2,Math.min(W-n.w/2,p[0]-drag.dx));n.y=Math.max(n.h/2,Math.min(H-n.h/2,p[1]-drag.dy));
+    schedule(()=>{updateNode(n);(connected[n.id]||[]).forEach(updateEdge);placeBadges();});}
+  else{const e=drag.e,A=nodeById[e.l.s],B=nodeById[e.l.t];e.off=[p[0]-(A.x+B.x)/2,p[1]-(A.y+B.y)/2];schedule(()=>updateEdge(e));}
+});
+function endDrag(){if(drag&&drag.type==='node')drag.n.g.classList.remove('dragging');drag=null;}
+svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
+
+// ---------- tooltip ----------
+const tip=document.getElementById('tip');
+function showTip(ev,t,b,m){if(drag)return;tip.querySelector('.tt').textContent=t;tip.querySelector('.tb').textContent=b;tip.querySelector('.tm').textContent=m||'';tip.style.opacity=1;moveTip(ev);}
+function moveTip(ev){const x=Math.min(ev.clientX+16,window.innerWidth-360),y=Math.min(ev.clientY+16,window.innerHeight-tip.offsetHeight-10);tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity=0;}
+
+// ---------- cards ----------
+const legCats=document.getElementById('legCats');
+CATS.forEach(c=>{const s=document.createElement('span');s.className='chip';s.innerHTML='<i style="background:var(--cat-'+c.key+'-fill);border-color:var(--cat-'+c.key+'-stroke)"></i>';s.appendChild(document.createTextNode(c.label));legCats.appendChild(s);});
+const catLabel={};CATS.forEach(c=>{catLabel[c.key]=c.label;});
+const varList=document.getElementById('varList');
+DATA.nodes.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(n=>{
+  const d=document.createElement('div');d.className='vitem';
+  d.innerHTML='<span class="dot" style="background:var(--cat-'+n.cat+'-fill);border-color:var(--cat-'+n.cat+'-stroke)"></span><div><div class="vname"></div><div class="vdesc"></div></div>';
+  d.querySelector('.vname').textContent=n.name;d.querySelector('.vdesc').textContent=n.desc+' — '+n.en+' (S01 หน้า '+n.page+'; '+catLabel[n.cat]+')';
+  varList.appendChild(d);
+});
+const loopList=document.getElementById('loopList');
+LOOPS.forEach(L=>{
+  const d=document.createElement('div');d.className='litem';
+  d.innerHTML='<div class="badge"></div><div><div class="vname"></div><div></div><div class="note"></div></div>';
+  d.querySelector('.badge').textContent=L.id;
+  d.querySelector('.vname').textContent=(L.type==='R'?'Reinforcing':'Balancing')+' · '+L.neg+' ลิงก์ (−)';
+  d.children[1].children[1].textContent=L.chainText;
+  d.querySelector('.note').textContent='Inferred: '+L.note;
+  loopList.appendChild(d);
+});
+const assList=document.getElementById('assList');
+ASSUMPTIONS.forEach((a,i)=>{const li=document.createElement('li');li.textContent=a;assList.appendChild(li);});
+
+const LBL={r:'ลูปเสริมแรง (Reinforcing)',b:'ลูปสมดุล (Balancing)'};
+// ---------- loop highlight ----------
+const loopBar=document.getElementById('loopBar');
+let pinned=null;
+LOOPS.forEach(L=>{
+  const pairs=new Set();for(let i=0;i<L.chainIds.length;i++){pairs.add(L.chainIds[i]+'>'+L.chainIds[(i+1)%L.chainIds.length]);}
+  L.edges=edges.filter(e=>pairs.has(e.key)&&!(e.key==='V010>V013'&&e.l.p==='-'));
+});
+function setDim(elm,on){if(on)elm.classList.add('dim');else elm.classList.remove('dim');}
+function highlightLoop(L){
+  clearHighlight(false);
+  const mem=new Set(L.chainIds);
+  DATA.nodes.forEach(n=>{setDim(n.g,!mem.has(n.id));if(mem.has(n.id))n.g.classList.add('hl-node');});
+  edges.forEach(e=>{const on=L.edges.indexOf(e)>=0;setDim(e.path,!on);setDim(e.label,!on);
+    if(on){e.path.setAttribute('stroke','var(--loop-r)');e.path.setAttribute('stroke-width','4.4');e.path.setAttribute('stroke-opacity','1');}});
+  LOOPS.forEach(o=>setDim(o.g,o!==L));
+  L.c.setAttribute('fill','var(--loop-r)');L.t.setAttribute('fill','#ffffff');
+  document.querySelectorAll('.litem').forEach(x=>x.classList.toggle('active',x.dataset.loop===L.id));
+  loopBar.style.display='flex';
+  loopBar.querySelector('.lbt').textContent=L.id+' · '+(L.type==='R'?LBL.r:LBL.b)+' — ';
+  loopBar.querySelector('.lbc').textContent=L.chainText;
+}
+function clearHighlight(all){
+  DATA.nodes.forEach(n=>{setDim(n.g,false);n.g.classList.remove('hl-node');});
+  edges.forEach(e=>{setDim(e.path,false);setDim(e.label,false);e.path.setAttribute('stroke','var(--edge-color)');e.path.setAttribute('stroke-width',e.loop?3.6:1.8);e.path.setAttribute('stroke-opacity',e.loop?1:.85);});
+  LOOPS.forEach(o=>{setDim(o.g,false);o.c.setAttribute('fill','var(--panel)');o.t.setAttribute('fill','var(--ink)');});
+  if(all!==false){document.querySelectorAll('.litem').forEach(x=>x.classList.remove('active'));loopBar.style.display='none';}
+}
+function restore(){if(pinned)highlightLoop(pinned);else clearHighlight(true);}
+function togglePin(L,scroll){
+  if(pinned===L){pinned=null;clearHighlight(true);return;}
+  pinned=L;highlightLoop(L);
+  if(scroll){const r=document.getElementById('stage').getBoundingClientRect();if(r.top<0||r.top>window.innerHeight*0.5)document.getElementById('loopBar').scrollIntoView({behavior:'smooth',block:'start'});}
+}
+document.querySelectorAll('.litem').forEach((d,i)=>{
+  const L=LOOPS[i];d.dataset.loop=L.id;
+  d.addEventListener('mouseenter',()=>highlightLoop(L));
+  d.addEventListener('mouseleave',restore);
+  d.addEventListener('click',()=>togglePin(L,true));
+});
+LOOPS.forEach(L=>{
+  L.g.style.cursor='pointer';
+  L.g.addEventListener('mouseenter',()=>{if(!drag)highlightLoop(L);});
+  L.g.addEventListener('mouseleave',restore);
+  L.g.addEventListener('click',()=>togglePin(L,false));
+});
+loopBar.querySelector('button').addEventListener('click',()=>{pinned=null;clearHighlight(true);});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){pinned=null;clearHighlight(true);}});
+
+// ---------- modal ----------
+const modal=document.getElementById('modal');
+function openModal(o){
+  const c=modal.querySelector('.card');c.querySelector('.mt').textContent=o.title;
+  const mn=c.querySelector('.mn');mn.textContent=o.note;mn.className='mn'+(o.error?' err':'');
+  const pv=c.querySelector('.prev');pv.innerHTML='';pv.style.display=o.preview?'block':'none';if(o.preview)pv.appendChild(o.preview);
+  const mb=c.querySelector('.mb');mb.innerHTML='';
+  if(o.href){const a=document.createElement('a');a.className='btn solid';a.textContent='Save';a.href=o.href;a.download=o.filename;mb.appendChild(a);}
+  const cl=document.createElement('button');cl.className='btn outline';cl.textContent='Close';cl.onclick=()=>{modal.style.display='none';};mb.appendChild(cl);
+  modal.style.display='flex';
+}
+modal.addEventListener('click',ev=>{if(ev.target===modal)modal.style.display='none';});
+function tryDownload(href,filename){try{const a=document.createElement('a');a.href=href;a.download=filename;document.body.appendChild(a);a.click();a.remove();}catch(err){}}
+function b64utf8(s){return btoa(unescape(encodeURIComponent(s)));}
+
+// ---------- PNG ----------
+function resolveVar(v){const m=/var\((--[a-z0-9-]+)\)/i.exec(v);if(!m)return v;const val=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();return val||'#000000';}
+document.getElementById('bPng').addEventListener('click',()=>{
+  pinned=null;clearHighlight(true);
+  try{
+    const clone=svg.cloneNode(true);
+    clone.setAttribute('width','1560');clone.setAttribute('height','1150');clone.setAttribute('xmlns',SVGNS);
+    clone.removeAttribute('style');
+    clone.querySelectorAll('[data-hit],[data-handle]').forEach(x=>x.remove());
+    clone.querySelectorAll('*').forEach(x=>{
+      ['fill','stroke'].forEach(a=>{const v=x.getAttribute(a);if(v&&v.indexOf('var(')>=0)x.setAttribute(a,resolveVar(v));});
+      const st=x.getAttribute('style');if(st&&st.indexOf('var(')>=0)x.setAttribute('style',st.replace(/var\((--[a-z0-9-]+)\)/ig,(m0)=>resolveVar(m0)));
+      x.removeAttribute('class');
+    });
+    const bg=document.createElementNS(SVGNS,'rect');bg.setAttribute('x','0');bg.setAttribute('y','0');bg.setAttribute('width','1560');bg.setAttribute('height','1150');bg.setAttribute('fill',resolveVar('var(--bg)'));
+    const defs=clone.querySelector('defs');clone.insertBefore(bg,defs?defs.nextSibling:clone.firstChild);
+    const xml=new XMLSerializer().serializeToString(clone);
+    const src='data:image/svg+xml;base64,'+b64utf8(xml);
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const cv=document.createElement('canvas');cv.width=3120;cv.height=2300;const ctx=cv.getContext('2d');
+        ctx.fillStyle=resolveVar('var(--bg)');ctx.fillRect(0,0,3120,2300);ctx.drawImage(img,0,0,3120,2300);
+        const url=cv.toDataURL('image/png');tryDownload(url,'cld_teen_parents.png');
+        const pi=document.createElement('img');pi.src=url;pi.alt='CLD preview';
+        openModal({title:'Download PNG',note:'ถ้าไฟล์ไม่ดาวน์โหลดอัตโนมัติ ให้กด Save (ขนาด 3120×2300 px)',preview:pi,href:url,filename:'cld_teen_parents.png'});
+      }catch(err){openModal({title:'Export failed',note:String(err&&err.message||err),error:true});}
+    };
+    img.onerror=()=>openModal({title:'Export failed',note:'ไม่สามารถโหลดภาพ SVG เพื่อแปลงเป็น PNG ได้',error:true});
+    img.src=src;
+  }catch(err){openModal({title:'Export failed',note:String(err&&err.message||err),error:true});}
+});
+
+// ---------- CSV ----------
+function csvRow(cells,n){const r=cells.slice();while(r.length<n)r.push('');return r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',');}
+function buildCsv(){
+  const N=4,rows=[];
+  rows.push(csvRow(['Variables'],N));rows.push(csvRow(['ID','Name','Description','System Area'],N));
+  DATA.nodes.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(n=>rows.push(csvRow([n.id,n.name,n.desc+' — '+n.en+' (S01 p.'+n.page+')',catLabel[n.cat]],N)));
+  rows.push(csvRow([],N));
+  rows.push(csvRow(['Feedback Loops'],N));rows.push(csvRow(['ID','Name','Causal Chain','Type'],N));
+  LOOPS.slice().sort((a,b)=>a.id.localeCompare(b.id)).forEach(L=>rows.push(csvRow([L.id,L.id+' (inferred from separate source links)',L.chainText,L.type==='R'?'Reinforcing':'Balancing'],N)));
+  rows.push(csvRow([],N));
+  rows.push(csvRow(['Assumptions & interpretive choices'],N));rows.push(csvRow(['ID','Description'],N));
+  ASSUMPTIONS.forEach((a,i)=>rows.push(csvRow(['A'+String(i+1).padStart(2,'0'),a],N)));
+  return '﻿'+rows.join('\r\n')+'\r\n';
+}
+document.getElementById('bCsv').addEventListener('click',()=>{
+  try{
+    const csv=buildCsv();const url='data:text/csv;charset=utf-8;base64,'+b64utf8(csv);
+    tryDownload(url,'cld_teen_parents_variables.csv');
+    const pre=document.createElement('pre');pre.textContent=csv.replace('﻿','');
+    openModal({title:'Export Variables',note:'CSV (UTF-8 พร้อม BOM) — ถ้าไฟล์ไม่ดาวน์โหลดอัตโนมัติ ให้กด Save',preview:pre,href:url,filename:'cld_teen_parents_variables.csv'});
+  }catch(err){openModal({title:'Export failed',note:String(err&&err.message||err),error:true});}
+});
+window.__CLD={DATA:DATA,LOOPS:LOOPS,edges:edges,buildCsv:buildCsv};
+</script>
+</body>
+</html>
